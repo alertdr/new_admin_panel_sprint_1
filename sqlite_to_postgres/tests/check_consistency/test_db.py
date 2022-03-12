@@ -4,12 +4,12 @@ import psycopg2
 import pytest
 from psycopg2.extras import DictCursor
 
-from sqlite_to_postgres.load_data import TABLES, DATACLASSES, dsl
+from sqlite_to_postgres.load_data import DSL, TABLES
 
 
 @pytest.fixture(scope='module')
 def pg_conn():
-    conn = psycopg2.connect(**dsl, cursor_factory=DictCursor)
+    conn = psycopg2.connect(**DSL, cursor_factory=DictCursor)
     yield conn
     conn.close()
 
@@ -24,7 +24,7 @@ def sqlite_conn():
 def test_compare_len_tables(pg_conn, sqlite_conn):
     pg_cursor = pg_conn.cursor()
     sqlite_cursor = sqlite_conn.cursor()
-    for table in TABLES:
+    for table in TABLES.keys():
         sqlite_table = get_sqlite_table(table, sqlite_cursor)
         pg_table = get_postgres_table(table, pg_cursor)
 
@@ -34,13 +34,13 @@ def test_compare_len_tables(pg_conn, sqlite_conn):
 def test_compare_all_rows(pg_conn, sqlite_conn):
     pg_cursor = pg_conn.cursor()
     sqlite_cursor = sqlite_conn.cursor()
-    for table in TABLES:
+    for table, model in TABLES.items():
         sqlite_table = get_sqlite_table(table, sqlite_cursor)
         pg_table = get_postgres_table(table, pg_cursor)
 
         for i in range(len(pg_table)):
-            pg_row = DATACLASSES[table](**pg_table[i])
-            sqlite_row = DATACLASSES[table](*sqlite_table[i])
+            pg_row = model(**pg_table[i])
+            sqlite_row = model(*sqlite_table[i])
             assert sqlite_row == pg_row
 
 
