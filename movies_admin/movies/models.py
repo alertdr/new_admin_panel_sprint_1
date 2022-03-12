@@ -1,6 +1,6 @@
 import uuid
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -15,13 +15,6 @@ class TimeStampedMixin(models.Model):
 
 class UUIDMixin(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    class Meta:
-        abstract = True
-
-
-class FilmworkMixin(models.Model):
-    film_work = models.ForeignKey('Filmwork', on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
@@ -48,11 +41,9 @@ class Filmwork(UUIDMixin, TimeStampedMixin):
     title = models.CharField(_('title'), max_length=255)
     genres = models.ManyToManyField(Genre, through='GenreFilmwork')
     description = models.TextField(_('description'), blank=True)
-    creation_date = models.DateField(_('creation_date'), blank=True)
-    rating = models.DecimalField(_('rating'), max_digits=2, decimal_places=1, blank=True,
-                                 validators=[MinValueValidator(0), MaxValueValidator(10)])
-    category = models.CharField(_('type'), max_length=20, choices=Type.choices, default=Type.MOVIE,
-                                db_column='type')
+    creation_date = models.DateField(_('creation_date'), blank=True, db_index=True)
+    rating = models.FloatField(_('rating'), blank=True, validators=[MinValueValidator(0), MaxValueValidator(10)])
+    category = models.CharField(_('type'), max_length=20, choices=Type.choices, default=Type.MOVIE, db_column='type')
 
     class Meta:
         db_table = "content\".\"film_work"
@@ -75,18 +66,28 @@ class Person(UUIDMixin, TimeStampedMixin):
         return self.full_name
 
 
-class GenreFilmwork(UUIDMixin, FilmworkMixin):
+class GenreFilmwork(UUIDMixin):
+    film_work = models.ForeignKey('Filmwork', on_delete=models.CASCADE)
     genre = models.ForeignKey('Genre', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "content\".\"genre_film_work"
+        constraints = [
+            models.UniqueConstraint(fields=['film_work_id', 'genre_id'],
+                                    name='film_work_person_idx')
+        ]
 
 
-class PersonFilmwork(UUIDMixin, FilmworkMixin):
+class PersonFilmwork(UUIDMixin):
+    film_work = models.ForeignKey('Filmwork', on_delete=models.CASCADE)
     person = models.ForeignKey('Person', on_delete=models.CASCADE)
     role = models.CharField(_('role'), blank=True, max_length=255)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "content\".\"person_film_work"
+        constraints = [
+            models.UniqueConstraint(fields=['film_work_id', 'person_id', 'role'],
+                                    name='film_work_person_role_idx')
+        ]
