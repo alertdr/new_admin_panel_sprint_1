@@ -45,11 +45,11 @@ class SQLiteLoader:
 
     @staticmethod
     def _make_rows_pretty(rows, model: dataclass):
-        dataclasses = []
+        pretty_rows = []
         for row in rows:
-            dataclasses.append(model(*row))
+            pretty_rows.append(model(*row))
 
-        return dataclasses
+        return pretty_rows
 
 
 class PostgresSaver:
