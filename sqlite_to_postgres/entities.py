@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from dateutil import parser
-
 from utils import cast_types, multiple_uuid_parse
 
 
@@ -39,6 +38,10 @@ class Filmwork:
             ]
         )
 
+    @staticmethod
+    def sqlite_columns():
+        return 'id, title, description, creation_date, rating, type, created_at, updated_at'
+
 
 @dataclass
 class Genre:
@@ -62,6 +65,10 @@ class Genre:
             ]
         )
 
+    @staticmethod
+    def sqlite_columns():
+        return 'id, name, description, created_at, updated_at'
+
 
 @dataclass
 class Person:
@@ -82,6 +89,10 @@ class Person:
                 self.modified == other.modified
             ]
         )
+
+    @staticmethod
+    def sqlite_columns():
+        return 'id, full_name, created_at, updated_at'
 
 
 @dataclass
@@ -105,6 +116,10 @@ class GenreFilmwork:
                 self.created == other.created
             ]
         )
+
+    @staticmethod
+    def sqlite_columns():
+        return 'id, film_work_id, genre_id, created_at'
 
 
 @dataclass
@@ -130,3 +145,7 @@ class PersonFilmwork:
                 self.created == other.created
             ]
         )
+
+    @staticmethod
+    def sqlite_columns():
+        return 'id, film_work_id, person_id, role, created_at'
