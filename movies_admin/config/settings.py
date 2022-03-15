@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 
@@ -13,7 +12,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 DEBUG = os.environ.get('DEBUG', False) == 'True'
 
-ALLOWED_HOSTS = json.loads(os.environ.get('ALLOWED_HOSTS'))
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
 
 AUTH_PASSWORD_VALIDATORS = [
     {
