@@ -36,7 +36,7 @@ class SQLiteLoader:
     def __init__(self, connection):
         self.con = connection
 
-    def load_movies(self, table, model) -> Generator:
+    def load_movies(self, table: str, model: dataclass) -> Generator:
         cursor = self.con.cursor()
         cursor.execute('SELECT {0} FROM {1}'.format(model.sqlite_columns(), table))
 
@@ -44,7 +44,7 @@ class SQLiteLoader:
             yield self._make_rows_pretty(rows, model)
 
     @staticmethod
-    def _make_rows_pretty(rows, model: dataclass):
+    def _make_rows_pretty(rows: list, model: dataclass) -> list:
         pretty_rows = []
         for row in rows:
             pretty_rows.append(model(*row))
@@ -56,7 +56,7 @@ class PostgresSaver:
     def __init__(self, connection):
         self.con = connection
 
-    def save_all_data(self, data: Generator, table, model):
+    def save_all_data(self, data: list, table: str, model: dataclass):
         cursor = self.con.cursor()
         columns = tuple(model.__annotations__.keys())
         columns_pretty = ', '.join(columns)
@@ -77,7 +77,8 @@ def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
     sqlite_loader = SQLiteLoader(connection)
     for table, model in TABLES.items():
         data = sqlite_loader.load_movies(table, model)
-        [postgres_saver.save_all_data(i, table, model) for i in data]
+        for batch in data:
+            postgres_saver.save_all_data(batch, table, model)
 
 
 if __name__ == '__main__':
