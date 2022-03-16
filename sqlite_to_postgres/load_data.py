@@ -56,7 +56,7 @@ class PostgresSaver:
     def __init__(self, connection):
         self.con = connection
 
-    def save_all_data(self, data: list, table: str, model: dataclass):
+    def save_data_batch(self, data: list, table: str, model: dataclass):
         cursor = self.con.cursor()
         columns = tuple(model.__annotations__.keys())
         columns_pretty = ', '.join(columns)
@@ -78,7 +78,7 @@ def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
     for table, model in TABLES.items():
         data = sqlite_loader.load_movies(table, model)
         for batch in data:
-            postgres_saver.save_all_data(batch, table, model)
+            postgres_saver.save_data_batch(batch, table, model)
 
 
 if __name__ == '__main__':
