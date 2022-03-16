@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                                               ('writer', 'writer')
                                           ],
                                           default='actor',
-                                          max_length=255,
+                                          max_length=32,
                                           verbose_name='role')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('film_work', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='movies.filmwork')),
