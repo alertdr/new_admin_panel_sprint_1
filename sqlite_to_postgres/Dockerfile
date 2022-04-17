@@ -10,8 +10,9 @@ RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt && \
     rm requirements.txt
 
-COPY etl/*.py .
+COPY *.py .
 COPY db.sqlite .
+COPY movies_database.ddl .
 
 EXPOSE 5432:5432
 

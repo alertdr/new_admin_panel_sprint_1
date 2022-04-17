@@ -6,11 +6,10 @@ from typing import Generator
 import psycopg2
 from attr import dataclass
 from dotenv import load_dotenv
-from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
 from entities import Filmwork, Genre, GenreFilmwork, Person, PersonFilmwork
-from sqlite_to_postgres.utils import backoff
+from utils import backoff
 
 TABLES = {
     'film_work': Filmwork,
@@ -58,6 +57,12 @@ class PostgresSaver:
     def __init__(self, connection):
         self.con = connection
 
+    def init_db(self):
+        with open('movies_database.ddl', 'r') as ddl:
+            lines = ddl.readlines()
+            query = ''.join(lines)
+            self.con.cursor().execute(query)
+
     def save_data_batch(self, data: list, table: str, model: dataclass):
         cursor = self.con.cursor()
         columns = tuple(model.__annotations__.keys())
@@ -78,6 +83,7 @@ def load_from_sqlite():
     """Основной метод загрузки данных из SQLite в Postgres"""
     with sqlite3.connect(SQLITE_DB_PATH) as sqlite_conn, psycopg2.connect(**DSL, cursor_factory=DictCursor) as pg_conn:
         postgres_saver = PostgresSaver(pg_conn)
+        postgres_saver.init_db()
         sqlite_loader = SQLiteLoader(sqlite_conn)
         for table, model in TABLES.items():
             data = sqlite_loader.load_movies(table, model)
