@@ -6,9 +6,11 @@ from typing import Generator
 import psycopg2
 from attr import dataclass
 from dotenv import load_dotenv
-from entities import Filmwork, Genre, GenreFilmwork, Person, PersonFilmwork
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
+
+from entities import Filmwork, Genre, GenreFilmwork, Person, PersonFilmwork
+from sqlite_to_postgres.utils import backoff
 
 TABLES = {
     'film_work': Filmwork,
@@ -71,21 +73,21 @@ class PostgresSaver:
                         """)
 
 
-def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
+@backoff()
+def load_from_sqlite():
     """Основной метод загрузки данных из SQLite в Postgres"""
-    postgres_saver = PostgresSaver(pg_conn)
-    sqlite_loader = SQLiteLoader(connection)
-    for table, model in TABLES.items():
-        data = sqlite_loader.load_movies(table, model)
-        for batch in data:
-            postgres_saver.save_data_batch(batch, table, model)
+    with sqlite3.connect(SQLITE_DB_PATH) as sqlite_conn, psycopg2.connect(**DSL, cursor_factory=DictCursor) as pg_conn:
+        postgres_saver = PostgresSaver(pg_conn)
+        sqlite_loader = SQLiteLoader(sqlite_conn)
+        for table, model in TABLES.items():
+            data = sqlite_loader.load_movies(table, model)
+            for batch in data:
+                postgres_saver.save_data_batch(batch, table, model)
+
+    sqlite_conn.close()
+    pg_conn.close()
 
 
 if __name__ == '__main__':
     psycopg2.extras.register_uuid()
-
-    with sqlite3.connect(SQLITE_DB_PATH) as sqlite_conn, psycopg2.connect(**DSL, cursor_factory=DictCursor) as pg_conn:
-        load_from_sqlite(sqlite_conn, pg_conn)
-
-    sqlite_conn.close()
-    pg_conn.close()
+    load_from_sqlite()

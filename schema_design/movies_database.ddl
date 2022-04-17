@@ -1,5 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS content;
 
+ALTER ROLE app SET search_path TO content, public;
+
 CREATE TABLE IF NOT EXISTS content.film_work
 (
     id            uuid PRIMARY KEY,
@@ -25,8 +27,8 @@ CREATE TABLE IF NOT EXISTS content.person
 CREATE TABLE IF NOT EXISTS content.person_film_work
 (
     id           uuid PRIMARY KEY,
-    person_id    uuid         NOT NULL REFERENCES person (id) ON DELETE CASCADE,
-    film_work_id uuid         NOT NULL REFERENCES film_work (id) ON DELETE CASCADE,
+    person_id    uuid         NOT NULL REFERENCES content.person (id) ON DELETE CASCADE,
+    film_work_id uuid         NOT NULL REFERENCES content.film_work (id) ON DELETE CASCADE,
     role         VARCHAR(32) NOT NULL,
     created      timestamp with time zone
 );
@@ -45,8 +47,8 @@ CREATE TABLE IF NOT EXISTS content.genre
 CREATE TABLE IF NOT EXISTS content.genre_film_work
 (
     id           uuid PRIMARY KEY,
-    genre_id     uuid NOT NULL REFERENCES genre (id) ON DELETE CASCADE,
-    film_work_id uuid NOT NULL REFERENCES film_work (id) ON DELETE CASCADE,
+    genre_id     uuid NOT NULL REFERENCES content.genre (id) ON DELETE CASCADE,
+    film_work_id uuid NOT NULL REFERENCES content.film_work (id) ON DELETE CASCADE,
     created      timestamp with time zone
 );
 
